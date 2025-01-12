@@ -4,6 +4,10 @@ set_target_properties(flatifier  PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CUR
 set_property(TARGET flatifier APPEND PROPERTY INCLUDE_DIRECTORIES "${INTERNAL_INCLUDES}")
 add_dependencies(tests flatifier)
 
+add_library(asymetric_nested_zones SHARED asymetric_nested_zones.cpp)
+target_link_libraries(asymetric_nested_zones simgrid)
+add_dependencies(tests asymetric_nested_zones)
+
 set(teshsuite_src ${teshsuite_src}  ${CMAKE_CURRENT_SOURCE_DIR}/flatifier.cpp PARENT_SCOPE)
 set(tesh_files    ${tesh_files}     ${CMAKE_CURRENT_SOURCE_DIR}/bogus_two_hosts_asymetric.tesh
                                     ${CMAKE_CURRENT_SOURCE_DIR}/bogus_missing_gateway.tesh
@@ -41,7 +45,7 @@ set(txt_files     ${txt_files}      ${CMAKE_CURRENT_SOURCE_DIR}/carol.fail
                                     ${CMAKE_CURRENT_SOURCE_DIR}/link.lat
                                     PARENT_SCOPE)
 
-ADD_TESH(tesh-platform-flatifier --setenv bindir=${CMAKE_BINARY_DIR}/teshsuite/platforms --setenv srcdir=${CMAKE_HOME_DIRECTORY} --cd ${CMAKE_HOME_DIRECTORY}/teshsuite/platforms flatifier.tesh)
+ADD_TESH(tesh-platform-flatifier --setenv bindir=${CMAKE_BINARY_DIR}/teshsuite/platforms --setenv srcdir=${CMAKE_HOME_DIRECTORY} --setenv libdir=${CMAKE_BINARY_DIR}/lib --cd ${CMAKE_HOME_DIRECTORY}/teshsuite/platforms flatifier.tesh)
 
 if(enable_debug)
   # these tests need assertions

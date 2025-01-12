@@ -1494,3 +1494,451 @@ $ ${bindir:=.}/flatifier ./two_hosts_one_link_splitduplex.xml "--log=root.fmt:[%
 >   </route>
 > </zone>
 > </platform>
+
+$ ${bindir:=.}/flatifier ${libdir:=.}/libasymetric_nested_zones.so "--log=root.fmt:[%10.6r]%e[%i:%a@%h]%e%m%n"
+> <?xml version='1.0'?>
+> <!DOCTYPE platform SYSTEM "https://simgrid.org/simgrid.dtd">
+> <platform version="4.1">
+> <zone id="rootzone" routing="Full">
+>   <host id="A1_h1" speed="1e+09"/>
+>   <host id="A1_h2" speed="1e+09"/>
+>   <host id="A2_h1" speed="1e+09"/>
+>   <host id="B1_h1" speed="1e+09"/>
+>   <host id="C1_h1" speed="1e+09"/>
+>   <host id="C1_h2" speed="1e+09"/>
+>   <router id="cluster_A1_router"/>
+>   <router id="cluster_A2_router"/>
+>   <router id="cluster_B1_router"/>
+>   <router id="zone_A_router"/>
+>   <router id="zone_B_router"/>
+>   <router id="zone_C_router"/>
+>   <link id="A1_h1link" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="A1_h2link" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="A1plink" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="A2_h1link" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="A2plink" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="B1_h1link" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="B1plink" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="C1_h1link" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="C1_h2link" bandwidth="1.25e+08" latency="0.0001"/>
+>   <link id="__loopback__" bandwidth="1e+10" latency="0" sharing_policy="FATPIPE"/>
+>   <link id="backbonelinkcluster_A1" bandwidth="2.5e+09" latency="0.0005"/>
+>   <link id="backbonelinkcluster_A2" bandwidth="2.5e+09" latency="0.0005"/>
+>   <link id="backbonelinkcluster_B1" bandwidth="2.5e+09" latency="0.0005"/>
+>   <link id="rootlink" bandwidth="1.25e+08" latency="0.0001"/>
+>   <route src="A1_h1" dst="A1_h1">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/>
+>   </route>
+>   <route src="A1_h1" dst="A1_h2">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="A1_h1" dst="A2_h1">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="A1_h1" dst="B1_h1">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="A1_h1" dst="C1_h1">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="A1_h1" dst="C1_h2">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="A1_h1" dst="cluster_A1_router">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/>
+>   </route>
+>   <route src="A1_h1" dst="cluster_A2_router">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="A1_h1" dst="cluster_B1_router">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="A1_h1" dst="zone_A_router">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="A1_h1" dst="zone_B_router">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="A1_h1" dst="zone_C_router">
+>   <link_ctn id="A1_h1link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="A1_h2" dst="A1_h1">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="A1_h2" dst="A1_h2">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/>
+>   </route>
+>   <route src="A1_h2" dst="A2_h1">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="A1_h2" dst="B1_h1">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="A1_h2" dst="C1_h1">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="A1_h2" dst="C1_h2">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="A1_h2" dst="cluster_A1_router">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/>
+>   </route>
+>   <route src="A1_h2" dst="cluster_A2_router">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="A1_h2" dst="cluster_B1_router">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="A1_h2" dst="zone_A_router">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="A1_h2" dst="zone_B_router">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="A1_h2" dst="zone_C_router">
+>   <link_ctn id="A1_h2link"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="A2_h1" dst="A1_h1">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="A2_h1" dst="A1_h2">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="A2_h1" dst="A2_h1">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/>
+>   </route>
+>   <route src="A2_h1" dst="B1_h1">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="A2_h1" dst="C1_h1">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="A2_h1" dst="C1_h2">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="A2_h1" dst="cluster_A1_router">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="A2_h1" dst="cluster_A2_router">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/>
+>   </route>
+>   <route src="A2_h1" dst="cluster_B1_router">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="A2_h1" dst="zone_A_router">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="A2_h1" dst="zone_B_router">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="A2_h1" dst="zone_C_router">
+>   <link_ctn id="A2_h1link"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="B1_h1" dst="A1_h1">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="B1_h1" dst="A1_h2">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="B1_h1" dst="A2_h1">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="B1_h1" dst="B1_h1">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/>
+>   </route>
+>   <route src="B1_h1" dst="C1_h1">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="B1_h1" dst="C1_h2">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="B1_h1" dst="cluster_A1_router">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="B1_h1" dst="cluster_A2_router">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="B1_h1" dst="cluster_B1_router">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/>
+>   </route>
+>   <route src="B1_h1" dst="zone_A_router">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="B1_h1" dst="zone_B_router">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="B1_h1" dst="zone_C_router">
+>   <link_ctn id="B1_h1link"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="C1_h1" dst="A1_h1">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="C1_h1" dst="A1_h2">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="C1_h1" dst="A2_h1">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="C1_h1" dst="B1_h1">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="C1_h1" dst="C1_h1">
+>   <link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="C1_h1" dst="C1_h2">
+>   <link_ctn id="C1_h1link"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="C1_h1" dst="cluster_A1_router">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="C1_h1" dst="cluster_A2_router">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="C1_h1" dst="cluster_B1_router">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="C1_h1" dst="zone_A_router">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="C1_h1" dst="zone_B_router">
+>   <link_ctn id="C1_h1link"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="C1_h1" dst="zone_C_router">
+>   <link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="C1_h2" dst="A1_h1">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="C1_h2" dst="A1_h2">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="C1_h2" dst="A2_h1">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="C1_h2" dst="B1_h1">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="C1_h2" dst="C1_h1">
+>   <link_ctn id="C1_h2link"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="C1_h2" dst="C1_h2">
+>   <link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="C1_h2" dst="cluster_A1_router">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="C1_h2" dst="cluster_A2_router">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="C1_h2" dst="cluster_B1_router">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="C1_h2" dst="zone_A_router">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="C1_h2" dst="zone_B_router">
+>   <link_ctn id="C1_h2link"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="C1_h2" dst="zone_C_router">
+>   <link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="cluster_A2_router">
+>   <link_ctn id="A1plink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="cluster_B1_router">
+>   <link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="zone_A_router">
+>   <link_ctn id="A1plink"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="zone_B_router">
+>   <link_ctn id="A1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="zone_C_router">
+>   <link_ctn id="A1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="A1_h1">
+>   <link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="A1_h2">
+>   <link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="A2_h1">
+>   <link_ctn id="A1plink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="B1_h1">
+>   <link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="C1_h1">
+>   <link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="cluster_A1_router" dst="C1_h2">
+>   <link_ctn id="A1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="cluster_A1_router">
+>   <link_ctn id="A2plink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="cluster_B1_router">
+>   <link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="zone_A_router">
+>   <link_ctn id="A2plink"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="zone_B_router">
+>   <link_ctn id="A2plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="zone_C_router">
+>   <link_ctn id="A2plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="A1_h1">
+>   <link_ctn id="A2plink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="A1_h2">
+>   <link_ctn id="A2plink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="A2_h1">
+>   <link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="B1_h1">
+>   <link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="C1_h1">
+>   <link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="cluster_A2_router" dst="C1_h2">
+>   <link_ctn id="A2plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="cluster_A1_router">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="cluster_A2_router">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="zone_A_router">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="zone_B_router">
+>   <link_ctn id="B1plink"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="zone_C_router">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="A1_h1">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="A1_h2">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="A2_h1">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="B1_h1">
+>   <link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="C1_h1">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="cluster_B1_router" dst="C1_h2">
+>   <link_ctn id="B1plink"/><link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="zone_A_router" dst="cluster_A1_router">
+>   <link_ctn id="A1plink"/>
+>   </route>
+>   <route src="zone_A_router" dst="cluster_A2_router">
+>   <link_ctn id="A2plink"/>
+>   </route>
+>   <route src="zone_A_router" dst="cluster_B1_router">
+>   <link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="zone_A_router" dst="zone_B_router">
+>   <link_ctn id="rootlink"/>
+>   </route>
+>   <route src="zone_A_router" dst="zone_C_router">
+>   <link_ctn id="rootlink"/>
+>   </route>
+>   <route src="zone_A_router" dst="A1_h1">
+>   <link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="zone_A_router" dst="A1_h2">
+>   <link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="zone_A_router" dst="A2_h1">
+>   <link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="zone_A_router" dst="B1_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="zone_A_router" dst="C1_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="zone_A_router" dst="C1_h2">
+>   <link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="zone_B_router" dst="cluster_A1_router">
+>   <link_ctn id="rootlink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="zone_B_router" dst="cluster_A2_router">
+>   <link_ctn id="rootlink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="zone_B_router" dst="cluster_B1_router">
+>   <link_ctn id="B1plink"/>
+>   </route>
+>   <route src="zone_B_router" dst="zone_A_router">
+>   <link_ctn id="rootlink"/>
+>   </route>
+>   <route src="zone_B_router" dst="zone_C_router">
+>   <link_ctn id="rootlink"/>
+>   </route>
+>   <route src="zone_B_router" dst="A1_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="zone_B_router" dst="A1_h2">
+>   <link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="zone_B_router" dst="A2_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="zone_B_router" dst="B1_h1">
+>   <link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="zone_B_router" dst="C1_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="zone_B_router" dst="C1_h2">
+>   <link_ctn id="rootlink"/><link_ctn id="C1_h2link"/>
+>   </route>
+>   <route src="zone_C_router" dst="cluster_A1_router">
+>   <link_ctn id="rootlink"/><link_ctn id="A1plink"/>
+>   </route>
+>   <route src="zone_C_router" dst="cluster_A2_router">
+>   <link_ctn id="rootlink"/><link_ctn id="A2plink"/>
+>   </route>
+>   <route src="zone_C_router" dst="cluster_B1_router">
+>   <link_ctn id="rootlink"/><link_ctn id="B1plink"/>
+>   </route>
+>   <route src="zone_C_router" dst="zone_A_router">
+>   <link_ctn id="rootlink"/>
+>   </route>
+>   <route src="zone_C_router" dst="zone_B_router">
+>   <link_ctn id="rootlink"/>
+>   </route>
+>   <route src="zone_C_router" dst="A1_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h1link"/>
+>   </route>
+>   <route src="zone_C_router" dst="A1_h2">
+>   <link_ctn id="rootlink"/><link_ctn id="A1plink"/><link_ctn id="backbonelinkcluster_A1"/><link_ctn id="A1_h2link"/>
+>   </route>
+>   <route src="zone_C_router" dst="A2_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="A2plink"/><link_ctn id="backbonelinkcluster_A2"/><link_ctn id="A2_h1link"/>
+>   </route>
+>   <route src="zone_C_router" dst="B1_h1">
+>   <link_ctn id="rootlink"/><link_ctn id="B1plink"/><link_ctn id="backbonelinkcluster_B1"/><link_ctn id="B1_h1link"/>
+>   </route>
+>   <route src="zone_C_router" dst="C1_h1">
+>   <link_ctn id="C1_h1link"/>
+>   </route>
+>   <route src="zone_C_router" dst="C1_h2">
+>   <link_ctn id="C1_h2link"/>
+>   </route>
+> </zone>
+> </platform>
