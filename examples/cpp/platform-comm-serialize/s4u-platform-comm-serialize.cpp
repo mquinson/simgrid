@@ -67,7 +67,7 @@ public:
   void operator()()
   {
     /* Where we store all incoming msgs */
-    std::unordered_map<sg4::CommPtr, std::shared_ptr<std::string*>> pending_msgs;
+    std::map<sg4::CommPtr, std::shared_ptr<std::string*>> pending_msgs;
     sg4::ActivitySet pending_comms;
 
     XBT_INFO("Wait for %d messages asynchronously", messages_count);

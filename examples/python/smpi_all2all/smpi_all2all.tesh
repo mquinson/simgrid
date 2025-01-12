@@ -1,0 +1,19 @@
+#!/usr/bin/env tesh
+
+p Testing with default compound
+
+$ ${pythoncmd:=python3} ${PYTHON_TOOL_OPTIONS:=} ${srcdir:=.}/all2all.py --platform ${platfdir}/small_platform.xml "--log=root.fmt:[%10.6r]%e(%i:%a@%h)%e%m%n"
+>[  0.000000] (0:maestro@) You did not set the power of the host running the simulation.  The timings will certainly not be accurate.  Use the option "--cfg=smpi/host-speed:<flops>" to set its value, or "--cfg=smpi/host-speed:auto" to request an automatic benchmark of the correct value on your machine. Check https://simgrid.org/doc/latest/Configuring_SimGrid.html#automatic-benchmarking-of-smpi-code for more information.
+>[  0.000000] (1:pinger#0@Jupiter) ping 2
+>[  0.000000] (1:pinger#0@Jupiter) ping 0
+>[  0.000000] (2:pinger#1@Tremblay) ping 2
+>[  0.000000] (2:pinger#1@Tremblay) ping 1
+>[  0.019025] (2:pinger#1@Tremblay) input first half [99 78 61 16 73]
+>[  0.019025] (2:pinger#1@Tremblay) input second half [ 8 62 27 30 80]
+>[  0.019025] (2:pinger#1@Tremblay) output first half [ 8 62 27 30 80]
+>[  0.019025] (2:pinger#1@Tremblay) output second half [ 8 62 27 30 80]
+>[  0.019025] (1:pinger#0@Jupiter) input first half [99 78 61 16 73]
+>[  0.019025] (1:pinger#0@Jupiter) input second half [ 8 62 27 30 80]
+>[  0.019025] (1:pinger#0@Jupiter) output first half [99 78 61 16 73]
+>[  0.019025] (1:pinger#0@Jupiter) output second half [99 78 61 16 73]
+>[  0.019025] (0:maestro@) Total simulation time: 0.019

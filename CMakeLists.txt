@@ -799,7 +799,20 @@ if(enable_python)
     if(NOT enable_lto)
       set(pybind11_options NO_EXTRAS)
     endif()
-    pybind11_add_module(python-bindings src/bindings/python/simgrid_python.cpp ${pybind11_options})
+    set(python_files
+        ${CMAKE_SOURCE_DIR}/src/bindings/python/simgrid_python.cpp)
+
+    if (((NOT DEFINED enable_smpi) OR enable_smpi))
+      set(python_files ${python_files}
+           ${CMAKE_SOURCE_DIR}/src/bindings/python/smpi_python.cpp)
+      add_compile_definitions(SIMGRID_PYTHON_SMPI)
+    endif()
+
+    message(STATUS "Files to compile: ${python_files}")
+    pybind11_add_module(python-bindings
+                        ${python_files}
+                        ${pybind11_options})
+
     target_compile_features(python-bindings PRIVATE cxx_std_14)
     target_link_libraries(python-bindings PUBLIC simgrid)
     set_target_properties(python-bindings PROPERTIES

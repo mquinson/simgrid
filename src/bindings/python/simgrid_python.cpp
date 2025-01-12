@@ -2,11 +2,12 @@
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPL) which comes with this package. */
-
 #include <pybind11/pybind11.h> // Must come before our own stuff
 
 #include <pybind11/functional.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 #include "simgrid/kernel/ProfileBuilder.hpp"
 #include "simgrid/kernel/routing/NetPoint.hpp"
@@ -67,6 +68,9 @@ using simgrid::s4u::TaskPtr;
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(python, "python");
 
+#ifdef SIMGRID_PYTHON_SMPI
+void SMPI_bindings(py::module& m);
+#endif
 namespace {
 
 std::string get_simgrid_version()
@@ -1031,4 +1035,7 @@ PYBIND11_MODULE(simgrid, m)
       .def(
           "__repr__", [](const ActivitySetPtr) { return "ActivitySet([...])"; },
           "Textual representation of the ActivitySet");
+#ifdef SIMGRID_PYTHON_SMPI
+  SMPI_bindings(m);
+#endif
 }
