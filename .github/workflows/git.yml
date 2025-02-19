@@ -80,7 +80,7 @@ jobs:
 
       - name: build
         run: |
-          sudo apt-get update && sudo apt-get install ninja-build libboost-dev libboost-context-dev pybind11-dev libevent-dev
+          sudo apt-get update && sudo apt-get install ninja-build libboost-dev libboost-context-dev pybind11-dev
           mkdir build ; cd build
           cmake -GNinja -Denable_debug=ON -Denable_documentation=OFF -Denable_coverage=OFF \
                 -Denable_compile_optimizations=ON -Denable_compile_warnings=ON \

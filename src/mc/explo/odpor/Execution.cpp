@@ -341,19 +341,30 @@ std::optional<PartialExecution> Execution::get_odpor_extension_from(EventHandle 
     }
   }
 
-  for (const auto& [aid, astate] : state_at_e.get_actors_list()) {
-    const bool is_in_WI_E      = astate.is_enabled() and is_independent_with_execution_of(v, astate.get_transition());
-    const bool is_in_sleep_set = sleep_E_prime.count(aid) > 0;
-
-    // `action(aid)` is in `WI_[E](v)` but also is contained in the sleep set.
-    // This implies that the intersection between the two is non-empty
-    if (is_in_WI_E && is_in_sleep_set) {
+  for (const auto& aid : sleep_E_prime) {
+    const auto next_transition_aid = std::find_if(this->begin() + e + 1, this->end(),
+                                                  [&](const auto& e) { return e.get_transition()->aid_ == aid; });
+    xbt_assert(next_transition_aid != this->end(),
+               "Since this actor is in the sleep set, it should be executed at some point. Fix me!");
+    if (is_in_weak_initial_of(next_transition_aid->get_transition().get(), v)) {
       XBT_DEBUG("Discarding this potential because a weak-initial actor is already in the sleep set");
       return std::nullopt;
     }
   }
 
   return v;
+}
+
+bool Execution::is_in_weak_initial_of(Transition* t, const PartialExecution& w)
+{
+
+  for (const auto& w_i : w) {
+    if (t->aid_ == w_i->aid_)
+      return true;
+    if (w_i->depends(t))
+      return false;
+  }
+  return true;
 }
 
 bool Execution::is_initial_after_execution_of(const PartialExecution& w, aid_t p)

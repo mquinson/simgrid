@@ -87,7 +87,6 @@ void DFSExplorer::step_exploration(odpor::Execution& S, aid_t next_actor, stack_
   }
 
   XBT_DEBUG("Going to execute actor %ld", next_actor);
-  auto transition_to_be_executed = state->get_actors_list().at(next_actor).get_transition();
 
   std::shared_ptr<Transition> executed_transition;
   StatePtr next_state;
@@ -104,9 +103,12 @@ void DFSExplorer::step_exploration(odpor::Execution& S, aid_t next_actor, stack_
     }
   } catch (McWarning& error) {
     // If an error is reached while executing the transition ...
-    XBT_VERB("An error occured while executing %ld: %.60s (stack depth: %zu, state: %ld, %zu interleaves)",
-             transition_to_be_executed->aid_, transition_to_be_executed->to_string().c_str(), state_stack.size(),
-             state->get_num(), state->count_todo());
+    if (XBT_LOG_ISENABLED(mc_dfs, xbt_log_priority_debug)) {
+      auto transition_to_be_executed = state->get_actors_list().at(next_actor).get_transition();
+      XBT_DEBUG("An error occured while executing %ld: %.60s (stack depth: %zu, state: %ld, %zu interleaves)",
+                transition_to_be_executed->aid_, transition_to_be_executed->to_string().c_str(), state_stack.size(),
+                state->get_num(), state->count_todo());
+    }
 
     // ... reset the application to the step before dying
     // ... the normal backtrack style would be upset, because currently the application is dead
@@ -118,7 +120,7 @@ void DFSExplorer::step_exploration(odpor::Execution& S, aid_t next_actor, stack_
     // ... Add that fake state and compute races
     state_stack.emplace_back(std::move(next_state));
     stack_ = &state_stack;
-    S.push_transition(transition_to_be_executed);
+    S.push_transition(std::make_shared<Transition>(Transition::Type::UNKNOWN, next_actor, 0));
     std::shared_ptr<Reduction::RaceUpdate> todo_updates = reduction_algo_->races_computation(S, stack_);
     reduction_algo_->apply_race_update(std::move(todo_updates));
 

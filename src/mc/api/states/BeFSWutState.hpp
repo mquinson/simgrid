@@ -22,7 +22,7 @@ class XBT_PRIVATE BeFSWutState : public WutState {
   /** Store the aid that have been visited at least once. This is usefull both to know what not to
    *  revisit, but also to remember the order in which the children were visited. The latter information
    *  being important for the correction. */
-  std::vector<aid_t> done_;
+  std::vector<std::shared_ptr<Transition>> done_;
 
   /** Only leftmosts states of the tree can be closed. This is decided on creation based on parent
    *  value, and then updated when nearby states are closed. */

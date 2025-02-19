@@ -12,7 +12,10 @@
 #include "src/mc/mc_base.hpp"
 #include "src/mc/mc_config.hpp"
 #include "src/mc/mc_environ.h"
+#include "xbt/asserts.h"
 #include "xbt/log.h"
+#include <cstddef>
+#include <sstream>
 #if HAVE_SMPI
 #include "src/smpi/include/private.hpp"
 #endif
@@ -107,22 +110,55 @@ void AppSide::handle_simcall_execute(const s_mc_message_simcall_execute_t* messa
              strerror(errno));
 
   // Finish the RPC from the server: return a serialized observer, to build a Transition on Checker side
-  s_mc_message_simcall_execute_answer_t answer = {};
-  answer.type                                  = MessageType::SIMCALL_EXECUTE_REPLY;
-  std::stringstream stream;
-  if (actor->simcall_.observer_ != nullptr) {
-    actor->simcall_.observer_->serialize(stream);
-  } else {
-    stream << (short)mc::Transition::Type::UNKNOWN;
-  }
-  std::string str = stream.str();
-  xbt_assert(str.size() + 1 <= answer.buffer.size(),
-             "The serialized simcall is too large for the buffer. Please fix the code.");
-  strncpy(answer.buffer.data(), str.c_str(), answer.buffer.size() - 1);
-  answer.buffer.back() = '\0';
+  s_mc_message_simcall_execute_answer_t answer;
+  answer.type = MessageType::SIMCALL_EXECUTE_REPLY;
+  answer.aid  = actor->get_pid();
+  if (message->want_transition) {
 
-  XBT_VERB("send SIMCALL_EXECUTE_ANSWER(%s) ~> '%s'", actor->get_cname(), str.c_str());
+    std::stringstream stream;
+    if (actor->simcall_.observer_ != nullptr) {
+      actor->simcall_.observer_->serialize(stream);
+    } else {
+      stream << (short)mc::Transition::Type::UNKNOWN;
+    }
+    std::string str = stream.str();
+    xbt_assert(str.size() + 1 <= answer.buffer.size(),
+               "The serialized simcall is too large for the buffer. Please fix the code.");
+    strncpy(answer.buffer.data(), str.c_str(), answer.buffer.size() - 1);
+    answer.buffer.back() = '\0';
+    XBT_VERB("send SIMCALL_EXECUTE_ANSWER(%s) ~> '%s'", actor->get_cname(), str.c_str());
+  } else
+    XBT_VERB("send SIMCALL_EXECUTE_ANSWER(%s) with no transition inside", actor->get_cname());
+
   xbt_assert(channel_.send(answer) == 0, "Could not send response: %s", strerror(errno));
+}
+
+void AppSide::handle_replay(const s_mc_message_replay_t* msg) const
+{
+  aid_t aid;
+  int times_considered;
+  int replay_size = msg->count;
+  XBT_DEBUG("Going to replay %d transitions", replay_size);
+  for (int i = 0; i < replay_size; i++) {
+    aid              = msg->aids[i];
+    times_considered = msg->times[i];
+
+    XBT_VERB("MC asked to replay %ld(nb_times=%d)", aid, times_considered);
+    kernel::actor::ActorImpl* actor = kernel::EngineImpl::get_instance()->get_actor_by_pid(aid);
+    xbt_assert(actor != nullptr, "Invalid pid %ld", aid);
+    xbt_assert((actor->simcall_.observer_ == nullptr &&
+                actor->simcall_.call_ != simgrid::kernel::actor::Simcall::Type::NONE) ||
+                   (actor->simcall_.observer_ != nullptr && actor->simcall_.observer_->is_enabled()),
+               "Please, model-checker, don't execute disabled transitions. You tried to execute %s which is disabled",
+               actor->simcall_.observer_->to_string().c_str());
+
+    actor->simcall_handle(times_considered);
+    simgrid::mc::execute_actors();
+  }
+
+  // Say the server that the replay is over and that it should proceed
+  xbt_assert(channel_.send(MessageType::WAITING) == 0, "Could not send MESSAGE_WAITING to model-checker: %s",
+             strerror(errno));
 }
 
 void AppSide::handle_finalize(const s_mc_message_int_t* msg) const
@@ -212,7 +248,7 @@ void AppSide::handle_wait_child(const s_mc_message_int_t* msg)
   answer.value              = status;
   xbt_assert(channel_.send(answer) == 0, "Could not send response to WAIT_CHILD: %s", strerror(errno));
 }
-void AppSide::handle_actors_status() const
+void AppSide::handle_actors_status(const s_mc_message_actors_status_t* msg) const
 {
   auto const& actor_list = kernel::EngineImpl::get_instance()->get_actor_list();
   XBT_DEBUG("Serialize the actors to answer ACTORS_STATUS from the checker. %zu actors to go.", actor_list.size());
@@ -239,6 +275,9 @@ void AppSide::handle_actors_status() const
     size_t size = status.size() * sizeof(s_mc_message_actors_status_one_t);
     xbt_assert(channel_.send(status.data(), size) == 0, "Could not send ACTORS_STATUS_REPLY data: %s", strerror(errno));
   }
+
+  if (not msg->want_transitions_)
+    return;
 
   // Serialize each transition to describe what each actor is doing
   XBT_DEBUG("Deliver ACTOR_TRANSITION_PROBE payload");
@@ -318,6 +357,11 @@ void AppSide::handle_messages()
         handle_simcall_execute((s_mc_message_simcall_execute_t*)message_buffer.data());
         break;
 
+      case MessageType::REPLAY:
+        assert_msg_size("REPLAY", s_mc_message_replay_t);
+        handle_replay((s_mc_message_replay_t*)message_buffer.data());
+        break;
+
       case MessageType::FINALIZE:
         assert_msg_size("FINALIZE", s_mc_message_int_t);
         handle_finalize((s_mc_message_int_t*)message_buffer.data());
@@ -334,8 +378,8 @@ void AppSide::handle_messages()
         break;
 
       case MessageType::ACTORS_STATUS:
-        assert_msg_size("ACTORS_STATUS", s_mc_message_t);
-        handle_actors_status();
+        assert_msg_size("ACTORS_STATUS", s_mc_message_actors_status_t);
+        handle_actors_status((s_mc_message_actors_status_t*)message_buffer.data());
         break;
 
       case MessageType::ACTORS_MAXPID:

@@ -394,6 +394,12 @@ public:
    * the execution
    */
   void push_partial_execution(const PartialExecution&);
+
+  /**
+   * @brief Returns wether a given transition is in WI(v)
+   *
+   */
+  static bool is_in_weak_initial_of(Transition*, const PartialExecution&);
 };
 
 class MazurkiewiczTraces {

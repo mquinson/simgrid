@@ -6,6 +6,8 @@
 #include "src/mc/remote/CheckerSide.hpp"
 #include "src/mc/explo/Exploration.hpp"
 #include "src/mc/mc_environ.h"
+#include "src/mc/remote/mc_protocol.h"
+#include "xbt/asserts.h"
 #include "xbt/config.hpp"
 #include "xbt/system_error.hpp"
 #include <cerrno>
@@ -18,6 +20,8 @@
 #include <csignal>
 #include <fcntl.h>
 #include <sys/ptrace.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 
 #ifdef __linux__
@@ -116,54 +120,6 @@ static void wait_application_process(pid_t pid)
   XBT_DEBUG("%d ptrace correctly setup.", getpid());
 }
 
-void CheckerSide::setup_events()
-{
-  auto* base = event_base_new();
-  base_.reset(base);
-
-  socket_event_ = event_new(
-      base, get_channel().get_socket(), EV_READ | EV_PERSIST,
-      [](evutil_socket_t, short events, void* arg) {
-        auto* checker = static_cast<simgrid::mc::CheckerSide*>(arg);
-        xbt_assert(events == EV_READ, "Unexpected event");
-        do {
-          std::array<char, MC_MESSAGE_LENGTH> buffer;
-          ssize_t size = checker->get_channel().receive(buffer.data(), buffer.size(), MSG_DONTWAIT);
-          if (size == -1) {
-            XBT_ERROR("Channel::receive failure: %s", strerror(errno));
-            if (errno != EAGAIN)
-              throw simgrid::xbt::errno_error();
-          }
-
-          if (size == 0) { // The app closed the socket. It must be dead by now.
-            checker->handle_waitpid();
-            break;
-          }
-          if (not checker->handle_message(buffer.data(), size)) {
-            event_base_loopbreak(checker->base_.get());
-            break;
-          }
-        } while (checker->get_channel().has_pending_data());
-      },
-      this);
-  event_add(socket_event_, nullptr);
-
-  static bool first_time = true;
-  if (first_time) {
-    first_time    = false;
-    signal_event_ = event_new(
-        base, SIGCHLD, EV_SIGNAL | EV_PERSIST,
-        [](evutil_socket_t sig, short events, void* arg) {
-          auto* checker = static_cast<simgrid::mc::CheckerSide*>(arg);
-          xbt_assert(events == EV_SIGNAL, "Unexpected event");
-          xbt_assert(sig == SIGCHLD, "Unexpected signal: %d", sig);
-          checker->handle_waitpid();
-        },
-        this);
-    event_add(signal_event_, nullptr);
-  }
-}
-
 /* When this constructor is called, no other checkerside exists */
 CheckerSide::CheckerSide(const std::vector<char*>& args)
 {
@@ -196,19 +152,12 @@ CheckerSide::CheckerSide(const std::vector<char*>& args)
   ::close(sockets[0]);
   channel_.reset_socket(sockets[1]);
 
-  setup_events();
   wait_for_requests();
 }
 
 CheckerSide::~CheckerSide()
 {
   count_--;
-  event_del(socket_event_);
-  event_free(socket_event_);
-  if (signal_event_ != nullptr) {
-    event_del(signal_event_);
-    event_free(signal_event_);
-  }
 }
 
 /* This constructor is called when cloning a checkerside to get its application to fork away */
@@ -216,7 +165,6 @@ CheckerSide::CheckerSide(int socket, CheckerSide* child_checker)
     : channel_(socket, child_checker->channel_), child_checker_(child_checker)
 {
   count_++;
-  setup_events();
 
   s_mc_message_int_t answer;
   ssize_t s = get_channel().receive(answer);
@@ -262,9 +210,10 @@ std::unique_ptr<CheckerSide> CheckerSide::clone(int master_socket, const std::st
 
 Transition* CheckerSide::handle_simcall(aid_t aid, int times_considered, bool new_transition)
 {
-  get_channel().send(s_mc_message_simcall_execute_t{MessageType::SIMCALL_EXECUTE, aid, times_considered});
+  get_channel().send(
+      s_mc_message_simcall_execute_t{MessageType::SIMCALL_EXECUTE, aid, times_considered, new_transition});
 
-  dispatch_events(); // The app may send messages while processing the transition
+  sync_with_app(); // The app may send messages while processing the transition
 
   s_mc_message_simcall_execute_answer_t answer;
   ssize_t s = get_channel().receive(answer);
@@ -279,6 +228,32 @@ Transition* CheckerSide::handle_simcall(aid_t aid, int times_considered, bool ne
     return deserialize_transition(aid, times_considered, stream);
   } else
     return nullptr;
+}
+
+void CheckerSide::handle_replay(std::deque<std::pair<aid_t, int>> to_replay)
+{
+
+  s_mc_message_replay_t replay_msg;
+  replay_msg.type  = MessageType::REPLAY;
+  replay_msg.count = to_replay.size();
+
+  xbt_assert(to_replay.size() < MC_MAX_REPLAY_SIZE,
+             "Not enough space to replay the sequence (size:%d; max size: %u). Fix me!", (int)to_replay.size(),
+             MC_MAX_REPLAY_SIZE);
+
+  XBT_DEBUG("send a replay of size %lu", to_replay.size());
+  int i = 0;
+  for (auto const& [aid, time] : to_replay) {
+    xbt_assert(aid < 255, "Overflow on the aid value. %ld is too big to fit in an unsigned char", aid);
+    replay_msg.aids[i]  = aid;
+    replay_msg.times[i] = time;
+    i++;
+  }
+
+  xbt_assert(get_channel().send(replay_msg) == 0, "Could not send message to the app: %s", strerror(errno));
+
+  // Wait for the application to signal that it is waiting
+  sync_with_app();
 }
 
 void CheckerSide::finalize(bool terminate_asap)
@@ -297,34 +272,34 @@ void CheckerSide::finalize(bool terminate_asap)
              (int)answer.type, (int)MessageType::FINALIZE_REPLY);
 }
 
-void CheckerSide::dispatch_events() const
+aid_t CheckerSide::get_aid_of_next_transition()
 {
-  event_base_dispatch(base_.get());
+  auto [more_data, got] = get_channel().peek(sizeof(struct s_mc_message_simcall_execute_answer_t));
+  if (not more_data) // The app closed the socket. It must be dead by now.
+    handle_waitpid();
+
+  auto* msg = static_cast<struct s_mc_message_simcall_execute_answer_t*>(got);
+  xbt_assert(msg->type == MessageType::SIMCALL_EXECUTE,
+             "The next message on the wire is not a SIMCALL_EXECUTE as expected but a %s",
+             is_valid_MessageType((int)msg->type) ? to_c_str(msg->type) : "invalid message");
+
+  return msg->aid;
 }
 
-bool CheckerSide::handle_message(const char* buffer, ssize_t size)
+void CheckerSide::sync_with_app()
 {
-  MessageType type = ((s_mc_message_t*)buffer)->type;
-  ssize_t consumed = sizeof(s_mc_message_t);
+  /* Handle an ASSERTION message if any */
+  auto [more_data, type] = get_channel().peek_message_type();
+  if (not more_data) // The app closed the socket. It must be dead by now.
+    handle_waitpid();
 
-  xbt_assert(size >= consumed, "Broken message. Got only %ld bytes out of %ld.", size, consumed);
-  if (size > consumed) {
-    XBT_DEBUG("%d reinject %d bytes after a %s message", getpid(), (int)(size - consumed), to_c_str(type));
-    channel_.reinject(&buffer[consumed], size - consumed);
-  }
+  if (type == MessageType::ASSERTION_FAILED)
+    Exploration::get_instance()->report_assertion_failure(); // This is a noreturn function
 
-  switch (type) {
-
-    case MessageType::WAITING:
-      return false;
-
-    case MessageType::ASSERTION_FAILED:
-      Exploration::get_instance()->report_assertion_failure();
-      return true;
-
-    default:
-      xbt_die("Unexpected message from the application");
-  }
+  /* Stop waiting for eventual ASSERTION message when we get something else, that must be WAITING */
+  s_mc_message_t msg;
+  get_channel().receive(msg);
+  xbt_assert(msg.type == MessageType::WAITING, "Unexpected message");
 }
 
 void CheckerSide::wait_for_requests()
@@ -333,7 +308,7 @@ void CheckerSide::wait_for_requests()
   if (get_channel().send(MessageType::CONTINUE) != 0)
     throw xbt::errno_error();
 
-  dispatch_events();
+  sync_with_app();
 }
 
 void CheckerSide::handle_dead_child(int status)

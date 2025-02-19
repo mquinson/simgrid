@@ -20,7 +20,8 @@ namespace simgrid::mc {
 class Channel {
   int socket_ = -1;
   template <class M> static constexpr bool messageType() { return std::is_class_v<M> && std::is_trivial_v<M>; }
-  std::vector<char> buffer_;
+  char buffer_[MC_MESSAGE_LENGTH];
+  size_t buffer_size_ = 0;
 
 public:
   Channel() = default;
@@ -46,13 +47,19 @@ public:
   }
 
   // Receive
-  ssize_t receive(void* message, size_t size, int flags = 0);
+  ssize_t receive(void* message, size_t size);
   template <class M> typename std::enable_if_t<messageType<M>(), ssize_t> receive(M& m)
   {
-    return this->receive(&m, sizeof(M), 0);
+    return this->receive(&m, sizeof(M));
   }
+  // Peek (receive without consuming)
+  std::pair<bool, void*> peek(size_t size);
+
+  // Write the type of the next message in the reference parameter, and return false if no message is to be read (socket
+  // closed by peer)
+  std::pair<bool, MessageType> peek_message_type();
   void reinject(const char* data, size_t size);
-  bool has_pending_data() const { return not buffer_.empty(); }
+  bool has_pending_data() const { return buffer_size_ != 0; }
 
   // Socket handling
   int get_socket() const { return socket_; }

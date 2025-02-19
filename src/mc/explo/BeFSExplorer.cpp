@@ -177,8 +177,10 @@ void BeFSExplorer::run()
       }
     }
 
-    auto todo = state->get_actors_list().at(next).get_transition();
-    XBT_DEBUG("wanna execute %ld: %.60s", next, todo->to_string().c_str());
+    if (XBT_LOG_ISENABLED(mc_befs, xbt_log_priority_debug)) {
+      auto todo = state->get_actors_list().at(next).get_transition();
+      XBT_DEBUG("wanna execute %ld: %.60s", next, todo->to_string().c_str());
+    }
 
     /* Actually answer the request: let's execute the selected request (MCed does one step) */
     auto executed_transition = state->execute_next(next, get_remote_app());
@@ -196,10 +198,8 @@ void BeFSExplorer::run()
     if (_sg_mc_cached_states_interval > 0 && next_state->get_num() % _sg_mc_cached_states_interval == 0) {
       static unsigned max_files = sysconf(_SC_OPEN_MAX);
 
-      // TODO: we have to save many FDs because our code consumes 4 FDs per child process.
-      // We should not create a new event_base per CheckerSide to save FDs (but bad things happen if I try to do so
-      // tonight)
-      if (max_files < INT_MAX && ((CheckerSide::get_count() + 1) * 4 + 12) > max_files) {
+      // Save 100 FDs for when we want to restart an old fork: we need a new socket for it
+      if (CheckerSide::get_count() > max_files - 100) {
         // For now, each CheckerSide takes 4 FDs, and we have about 12 FDs before creating the first CheckerSide
         int cur_files =
             std::distance(std::filesystem::directory_iterator("/proc/self/fd"), std::filesystem::directory_iterator{});

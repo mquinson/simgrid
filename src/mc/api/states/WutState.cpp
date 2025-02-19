@@ -11,6 +11,7 @@
 #include "src/mc/transition/Transition.hpp"
 #include "xbt/asserts.h"
 #include "xbt/log.h"
+#include <memory>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(mc_wutstate, mc_state, "States using wakeup tree for ODPOR algorithm");
 
@@ -37,8 +38,11 @@ WutState::WutState(RemoteApp& remote_app, StatePtr parent_state) : SleepSetState
                                            "parent with an empty wakeup tree. This indicates either that ODPOR "
                                            "actor selection in State.cpp is incorrect, or that the code "
                                            "deciding when to make subtrees in ODPOR is incorrect");
-  if (not(get_transition_in()->aid_ == min_process_node.value()->get_actor() &&
-          get_transition_in()->type_ == min_process_node.value()->get_action()->type_)) {
+  if (not(get_transition_in()->aid_ ==
+          min_process_node.value()
+              ->get_actor() //&&
+                            // get_transition_in()->type_ == min_process_node.value()->get_action()->type_
+          )) {
     XBT_ERROR("We tried to make a subtree from a parent state who claimed to have executed `%s` on actor %ld "
               "but whose wakeup tree indicates it should have executed `%s` on actor %ld. This indicates "
               "that exploration is not following ODPOR. Are you sure you're choosing actors "
@@ -79,37 +83,10 @@ void WutState::add_arbitrary_todo()
   // For each variant of the transition that is enabled, we want to insert the action into the tree.
   // This ensures that all variants are searched
   for (unsigned times = 0; times < actor_state.get_max_considered(); ++times) {
-    wakeup_tree_.insert_at_root(actor_state.get_transition(times));
+    // WuT don't really need the transition that will be executed since it will disapear anyway as soon as the child
+    // state is created
+    wakeup_tree_.insert_at_root(std::make_shared<Transition>(Transition::Type::UNKNOWN, best_actor, times));
   }
-}
-
-void WutState::seed_wakeup_tree_if_needed(const odpor::Execution& prior)
-{
-  // TODO: It would be better not to have such a flag.
-  if (has_initialized_wakeup_tree) {
-    XBT_DEBUG("Reached a node with the following initialized WuT:");
-    XBT_DEBUG("\n%s", wakeup_tree_.string_of_whole_tree().c_str());
-
-    return;
-  }
-  // TODO: Note that the next action taken by the actor may be updated
-  // after it executes. But we will have already inserted it into the
-  // tree and decided upon "happens-before" at that point for different
-  // executions :(
-  if (wakeup_tree_.empty()) {
-    // Find an enabled transition to pick
-    for (const auto& [_, actor] : get_actors_list()) {
-      if (actor.is_enabled()) {
-        // For each variant of the transition that is enabled, we want to insert the action into the tree.
-        // This ensures that all variants are searched
-        for (unsigned times = 0; times < actor.get_max_considered(); ++times) {
-          wakeup_tree_.insert(odpor::PartialExecution{actor.get_transition(times)});
-        }
-        break; // Only one actor gets inserted (see pseudocode)
-      }
-    }
-  }
-  has_initialized_wakeup_tree = true;
 }
 
 void WutState::remove_subtree_at_aid(const aid_t proc)

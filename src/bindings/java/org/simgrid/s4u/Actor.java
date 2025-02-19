@@ -202,5 +202,5 @@ public abstract class Actor {
 
   public void exit() { simgridJNI.Actor_exit(swigCPtr, this); }
 
-  public void on_exit(CallbackBoolean code) { simgridJNI.Actor_on_exit(swigCPtr, this, code); }
+  public void on_exit(CallbackBoolean code) { simgridJNI.Actor_on_exit(swigCPtr, code); }
 }

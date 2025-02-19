@@ -66,13 +66,12 @@ no way to prove the correctness of your application in full generality with this
 Getting Mc SimGrid
 ------------------
 
-The model checker is included in the SimGrid source code, and it's compiled by default if all dependencies are found. It's also
+The model checker is included in the SimGrid source code, and it's compiled by default with no extra dependencies. It's also
 activated in the Debian package since v3.36-2. If your precompiled version of SimGrid lacks support for the model checker, you
 could build SimGrid from source. Simply request it from cmake (``cmake -Denable_model-checking .``) and then compile SimGrid
 :ref:`as usual <install_src>`. It should work out of the box on all major systems (Linux, FreeBSD, Windows with WSL, or Mac OS
 X). Double check the value of the ``SIMGRID_HAVE_MC`` in the generated file ``include/simgrid/config.h``. If it's not defined to
-1, read the configuration logs to understand why the model checker was not compiled in, and try again. Usually, it's because the
-``libevent-dev`` package is missing on the system.
+1, read the configuration logs to understand why the model checker was not compiled in, and try again. 
 
 Another approach is to use a docker image as follows. It starts a terminal within a Docker container where SimGrid is already 
 installed.

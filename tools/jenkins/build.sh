@@ -20,7 +20,7 @@ rm -f /tmp/cc*
 rm -f /tmp/simgrid-mc-*
 rm -f /tmp/*.so
 rm -f /tmp/*.so.*
-rm -f /tmp/simgrid-java-*
+rm -rf /tmp/simgrid-java-*
 ls /tmp
 df -h
 echo "XXXX Let's go"

@@ -26,11 +26,12 @@ namespace simgrid::mc {
 class Transition {
   /* Global statistics */
   static unsigned long executed_transitions_;
-  static unsigned long replayed_transitions_;
 
   friend State; // FIXME remove this once we have a proper class to handle the statistics
 
 public:
+  static unsigned long replayed_transitions_;
+
   /* Ordering is important here. depends() implementations only consider subsequent types in this ordering */
   XBT_DECLARE_ENUM_CLASS(
       Type,

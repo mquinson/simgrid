@@ -17,7 +17,6 @@ RUN apt-get --allow-releaseinfo-change update && \
        python3-pip \
        doxygen fig2dev \
        chrpath \
-       libevent-dev \
        python3-sphinx python3-breathe python3-sphinx-rtd-theme && \
     apt clean && apt autoclean
 

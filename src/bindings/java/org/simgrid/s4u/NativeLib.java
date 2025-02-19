@@ -71,24 +71,30 @@ public final class NativeLib {
 		try {
 			System.loadLibrary(name);
 			return;
-		} catch (UnsatisfiedLinkError systemException) { /* don't care */ }
+                } catch (UnsatisfiedLinkError systemException) {
+                  System.err.println(systemException);
+                }
 
-		System.err.println("\nCannot load the bindings to the "+name+" library in path "+getPath()+" and no usable SimGrid installation found on disk.");
-		if (cause != null) {
-			if (cause.getMessage().contains("libcgraph.so"))
-				System.err.println("HINT: Try to install the libcgraph package (sudo apt-get install libcgraph).");
-			else if (cause.getMessage().contains("libboost_context.so"))
-				System.err.println("HINT: Try to install the boost-context package (sudo apt-get install libboost-context-dev).");
-			else
-				System.err.println("Try to install the missing dependencies, if any. Read carefully the following error message.");
+                System.err.println("\nCannot load the bindings to the '" + name + "'' library in path " + getPath() +
+                                   " and no usable SimGrid installation found on disk.");
+                if (cause != null) {
+                  if (cause.getMessage().contains("libcgraph.so"))
+                    System.err.println("HINT: Try to install the libcgraph package (sudo apt-get install libcgraph).");
+                  else if (cause.getMessage().contains("libboost_context.so"))
+                    System.err.println(
+                        "HINT: Try to install the boost-context package (sudo apt-get install libboost-context-dev).");
+                  else
+                    System.err.println(
+                        "Try to install the missing dependencies, if any. Read carefully the following error message.");
 
-			System.err.println();
-			cause.printStackTrace();
-		} else {
-			System.err.println("This jar file does not seem to fit your system, and no usable SimGrid installation found on disk for "+name+".");
-		}
-		System.exit(1);
-	}
+                  System.err.println();
+                  cause.printStackTrace();
+                } else {
+                  System.err.println("This jar file does not seem to fit your system, and no usable SimGrid "
+                                     + "installation found on disk for " + name + ".");
+                }
+                System.exit(1);
+        }
 
 	/** Try to extract the library from the jarfile before loading it */
 	private static boolean loadLibAsStream (String name) throws IOException, UnsatisfiedLinkError {

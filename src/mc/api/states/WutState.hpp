@@ -38,22 +38,6 @@ public:
   aid_t next_odpor_transition() const;
 
   /**
-   * @brief Inserts an arbitrary enabled actor into the wakeup tree
-   * associated with this state, if such an actor exists and if
-   * the wakeup tree is already not empty
-   *
-   * @param prior The sequence of steps leading up to this state
-   * with respect to which the tree associated with this state should be
-   * a wakeup tree (wakeup trees are defined relative to an execution)
-   *
-   * @invariant: You should not manipulate a wakeup tree with respect
-   * to more than one execution; doing so will almost certainly lead to
-   * unexpected results as wakeup trees are defined relative to a single
-   * execution
-   */
-  void seed_wakeup_tree_if_needed(const odpor::Execution& prior);
-
-  /**
    * @brief Removes the subtree rooted at the single-process node
    * `N` running actor `p` of this state's wakeup tree
    */

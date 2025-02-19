@@ -253,10 +253,6 @@ static void sg_platf_new_cluster_flat(simgrid::kernel::routing::ClusterCreationA
     parent = simgrid::s4u::Engine::get_instance()->get_netzone_root();
   simgrid::s4u::NetZone* zone = parent->add_netzone_star(cluster->id);
 
-  /* set properties */
-  for (auto const& [key, value] : cluster->properties)
-    zone->set_property(key, value);
-
   /* Make the backbone */
   const simgrid::s4u::Link* backbone = nullptr;
   if ((cluster->bb_bw > 0) || (cluster->bb_lat > 0)) {
@@ -276,6 +272,7 @@ static void sg_platf_new_cluster_flat(simgrid::kernel::routing::ClusterCreationA
     XBT_DEBUG("<host\tid=\"%s\"\tspeed=\"%f\">", host_id.c_str(), cluster->speeds.front());
     const auto* host = zone->create_host(host_id, cluster->speeds)
                            ->set_core_count(cluster->core_amount)
+                           // Cluster properties are attached to each host instead of to the cluster zone
                            ->set_properties(cluster->properties)
                            ->seal();
 

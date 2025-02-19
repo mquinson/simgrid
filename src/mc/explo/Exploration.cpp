@@ -12,6 +12,7 @@
 #include "src/mc/mc_environ.h"
 #include "src/mc/mc_exit.hpp"
 #include "src/mc/mc_private.hpp"
+#include "src/mc/transition/Transition.hpp"
 #include "xbt/log.h"
 #include "xbt/random.hpp"
 #include "xbt/string.hpp"
@@ -262,12 +263,14 @@ void Exploration::backtrack_to_state(State* target_state, bool finalize_app)
   on_backtracking_signal(get_remote_app());
 
   std::deque<Transition*> replay_recipe;
+  std::deque<std::pair<aid_t, int>> recipe;
   auto* state       = target_state;
   State* root_state = nullptr;
   for (; state != nullptr && not state->has_state_factory(); state = state->get_parent_state()) {
-    if (state->get_transition_in() != nullptr) // The root has no transition_in
+    if (state->get_transition_in() != nullptr) { // The root has no transition_in
       replay_recipe.push_front(state->get_transition_in().get());
-    else
+      recipe.push_front({state->get_transition_in()->aid_, state->get_transition_in()->times_considered_});
+    } else
       root_state = state;
   }
 
@@ -279,13 +282,21 @@ void Exploration::backtrack_to_state(State* target_state, bool finalize_app)
     on_restore_state_signal(*state, get_remote_app());
   }
 
-  for (auto& transition : replay_recipe) {
-    transition->replay(get_remote_app());
-    on_transition_replay_signal(transition, get_remote_app());
-    visited_states_count_++;
-  }
+  XBT_DEBUG("Sending sequence for a replay: %s",
+            std::accumulate(recipe.begin(), recipe.end(), std::string(), [](std::string a, auto b) {
+              return std::move(a) + ';' + '<' + std::to_string(b.first) + '/' + std::to_string(b.second) + '>';
+            }).c_str());
 
+  get_remote_app().replay_sequence(recipe);
+
+  visited_states_count_ += recipe.size();
   backtrack_count_++;
+  Transition::replayed_transitions_ += recipe.size();
+
+  for (auto& transition : replay_recipe)
+    on_transition_replay_signal(transition, get_remote_app());
+
+  return;
 }
 
 }; // namespace simgrid::mc

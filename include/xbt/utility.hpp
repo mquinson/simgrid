@@ -23,7 +23,8 @@
   static constexpr char const* to_c_str(EnumType value)                                                                \
   {                                                                                                                    \
     constexpr std::array<const char*, _XBT_COUNT_ARGS(__VA_ARGS__)> names{{_XBT_STRINGIFY_ARGS(__VA_ARGS__)}};         \
-    return names.at(static_cast<int>(value));                                                                          \
+    return ((int)value) >= 0 && ((unsigned long)value) < names.size() ? names.at(static_cast<int>(value))              \
+                                                                      : "invalid value";                               \
   }                                                                                                                    \
   static constexpr bool is_valid_##EnumType(int raw_value)                                                             \
   {                                                                                                                    \

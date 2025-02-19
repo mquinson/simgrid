@@ -23,7 +23,7 @@ public class simgridJNI {
   public final static native void Actor_on_this_termination_cb(long cthis, Actor jthis, CallbackActor cb);
   public final static native void Actor_on_termination_cb(CallbackActor cb);
   public final static native void Actor_on_destruction_cb(CallbackActor cb);
-  public final static native void Actor_on_exit(long jarg1, Actor jarg1_, CallbackBoolean jcode);
+  public final static native void Actor_on_exit(long cthis, CallbackBoolean jcode);
   public final static native Actor Actor_self();
   public final static native void Actor_on_this_suspend_cb(long jarg1, Actor jarg1_, CallbackActor cb);
   public final static native void Actor_on_this_resume_cb(long jarg1, Actor jarg1_, CallbackActor cb);
@@ -239,7 +239,7 @@ public class simgridJNI {
   public final static native void Engine_track_vetoed_activities(long cthis);
   public final static native Activity[] Engine_get_vetoed_activities(long cthis);
   public final static native void Engine_clear_vetoed_activities(long cthis);
-  public final static native void Engine_load_deployment(long jarg1, Engine jarg1_, String jarg2);
+  public final static native void Engine_load_deployment(long jarg1, String jarg2);
   public final static native long Engine_get_host_count(long jarg1, Engine jarg1_);
   public final static native Host[] Engine_get_all_hosts(long jarg1, Engine jarg1_);
   public final static native Host[] Engine_get_hosts_from_MPI_hostfile(long jarg1, Engine jarg1_, String jarg2);

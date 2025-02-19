@@ -111,8 +111,6 @@ boost recommended components (optional).
   - On Debian / Ubuntu: ``apt install libboost-context-dev libboost-stacktrace-dev``
 python bindings (optional):
   - On Debian / Ubuntu: ``apt install pybind11-dev python3-dev``
-Model-checking mandatory dependencies
-  - On Debian / Ubuntu: ``apt install libevent-dev``
 Eigen3 (optional)
   - On Debian / Ubuntu: ``apt install libeigen3-dev``
   - On CentOS / Fedora: ``dnf install eigen3-devel``

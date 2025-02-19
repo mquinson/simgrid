@@ -13,6 +13,7 @@
 #include "src/mc/mc_exit.hpp"
 #include "src/mc/mc_record.hpp"
 #include "xbt/asserts.h"
+#include "xbt/log.h"
 #include <xbt/Extendable.hpp>
 
 #include <memory>
@@ -166,6 +167,11 @@ public:
    */
 
   void run_critical_exploration_on_need(ExitStatus error);
+
+  bool need_actor_status_transitions()
+  {
+    return _sg_mc_debug or get_model_checking_reduction() == ReductionMode::udpor;
+  }
 
   /** Print something to the dot output file*/
   void dot_output(const char* fmt, ...) XBT_ATTRIB_PRINTF(2, 3);

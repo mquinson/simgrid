@@ -712,7 +712,7 @@ XBT_PUBLIC void JNICALL Java_org_simgrid_s4u_simgridJNI_Actor_1on_1destruction_1
 }
 
 XBT_PUBLIC void JNICALL Java_org_simgrid_s4u_simgridJNI_Actor_1on_1exit(JNIEnv* jenv, jclass jcls, jlong cthis,
-                                                                        jobject jthis, jobject cb)
+                                                                        jobject cb)
 {
   if (cb) {
     try {
@@ -2880,12 +2880,12 @@ static void java_main(int argc, char* argv[])
   }
 
   // creates the java actor
-  jobject jactor = jenv->NewObject(actor_class, actor_constructor, args);
+  jobject jactor = jenv->NewGlobalRef(jenv->NewObject(actor_class, actor_constructor, args));
 
   ActorPtr result = Engine::get_instance()->add_actor(argv[0], simgrid::s4u::Host::current(), [jactor]() {
     auto jenv = ((simgrid::kernel::context::JavaContext*)simgrid::kernel::context::Context::self())->jenv_;
 
-    jenv->CallVoidMethod(jactor, Actor_methodId, s4u::Actor::self());
+    jenv->CallVoidMethod(jactor, Actor_methodId, (jlong)s4u::Actor::self());
     exception_check_after_upcall(get_jenv());
   });
   result->extension_set<ActorJavaExt>(new ActorJavaExt(jactor));
@@ -2896,7 +2896,7 @@ static void java_main(int argc, char* argv[])
 }
 
 XBT_PUBLIC void JNICALL Java_org_simgrid_s4u_simgridJNI_Engine_1load_1deployment(JNIEnv* jenv, jclass jcls, jlong cthis,
-                                                                                 jobject jthis, jstring jfilename)
+                                                                                 jstring jfilename)
 {
   if (jfilename) {
     simgrid_register_default(java_main);

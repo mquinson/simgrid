@@ -15,6 +15,10 @@ sthread:
  - Implement pthread_exit() and pthread_cond_timedwait()
  - Further restrict its portability: Linux only, and now also GLIBC only.
 
+Model-checker:
+ - Dependency on libevent was removed.
+ - Greatly improve the performances, and fix some bugs.
+
 Platform API:
  - The root netzone of every platform uses the full routing. It's created by default.
    The ability to change the root zone does not increase the expressivity in any way, but it greatly complicates our code.

@@ -34,16 +34,13 @@ BeFSWutState::BeFSWutState(RemoteApp& remote_app) : WutState(remote_app)
 BeFSWutState::BeFSWutState(RemoteApp& remote_app, StatePtr parent_state) : WutState(remote_app, parent_state)
 {
   auto parent = static_cast<BeFSWutState*>(parent_state.get());
-  for (const aid_t actor : parent->done_) {
-    auto transition_in_done_set = parent->get_actors_list().at(actor).get_transition();
-    if (not get_transition_in()->depends(transition_in_done_set.get()))
-      sleep_add_and_mark(transition_in_done_set);
+  for (const auto& transition : parent->done_) {
+    if (not get_transition_in()->depends(transition.get()))
+      sleep_add_and_mark(transition);
   }
 
   is_leftmost_ = parent->is_leftmost_ and parent->done_.size() == parent->closed_.size();
-
-  aid_t incoming_actor = parent_state->get_transition_out()->aid_;
-  parent->done_.push_back(incoming_actor);
+  parent->done_.push_back(get_transition_in());
 }
 
 void BeFSWutState::record_child_state(StatePtr child)
@@ -68,8 +65,9 @@ aid_t BeFSWutState::next_transition() const
   int best_valuation = std::numeric_limits<int>::max();
   int best_actor     = -1;
   for (const aid_t aid : wakeup_tree_.get_direct_children_actors()) {
-    if (get_actors_list().find(aid) ==
-        get_actors_list().end()) { // the tree is asking to execute someone that doesn't exist in the actor list!
+    if (_sg_mc_debug and
+        get_actors_list().find(aid) ==
+            get_actors_list().end()) { // the tree is asking to execute someone that doesn't exist in the actor list!
       XBT_CRITICAL("Find a tree pretending that it could execute %ld while this actor is not a possibility (%lu "
                    "existing actors from this state). Find the culprit, and Fix Me. Error @state %ld",
                    aid, get_actors_list().size(), this->get_num());
@@ -96,10 +94,10 @@ std::unordered_set<aid_t> BeFSWutState::get_sleeping_actors(aid_t after_actor) c
   for (const auto& [aid, _] : get_sleep_set()) {
     actors.insert(aid);
   }
-  for (const auto& aid : done_) {
-    if (aid == after_actor)
+  for (const auto& t : done_) {
+    if (t->aid_ == after_actor)
       break;
-    actors.insert(aid);
+    actors.insert(t->aid_);
   }
   return actors;
 }
@@ -120,8 +118,9 @@ StatePtr BeFSWutState::insert_into_final_wakeup_tree(odpor::PartialExecution& w)
                 return a;
             }).c_str());
 
-  for (auto& state_aid : this->done_) {
-    auto state = this->children_states_[state_aid];
+  for (auto& t : this->done_) {
+    auto aid   = t->aid_;
+    auto state = this->children_states_[aid];
     if (state == nullptr)
       continue;
 
@@ -207,7 +206,7 @@ void BeFSWutState::signal_on_backtrack()
 
   if (closed_.size() < done_.size()) {
     // if there are children states that are being visited, we may need to update the leftmost information
-    aid_t leftmost_aid = done_[closed_.size()];
+    aid_t leftmost_aid              = done_[closed_.size()]->aid_;
     auto children_aid               = children_states_[leftmost_aid];
     auto children_befs_aid          = static_cast<BeFSWutState*>(children_aid.get());
     xbt_assert(children_aid != nullptr);

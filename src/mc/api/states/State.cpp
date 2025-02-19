@@ -5,6 +5,7 @@
 
 #include "src/mc/api/states/State.hpp"
 #include "src/mc/explo/Exploration.hpp"
+#include "src/mc/mc_config.hpp"
 #include "xbt/log.h"
 
 #include <algorithm>
@@ -14,7 +15,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(mc_state, mc, "Logging specific to MC states");
 
 namespace simgrid::mc {
 
-long State::expended_states_ = 0;
+long State::expended_states_  = 0;
 long State::in_memory_states_ = 0;
 
 State::~State()
@@ -88,29 +89,34 @@ std::shared_ptr<Transition> State::execute_next(aid_t next, RemoteApp& app)
 
   // 1. Identify the appropriate ActorState to prepare for execution
   // when simcall_handle will be called on it
-  auto& actor_state                        = actors_to_run_.at(next);
-  const unsigned times_considered          = actor_state.do_consider();
-  const auto* expected_executed_transition = actor_state.get_transition(times_considered).get();
-  xbt_assert(actor_state.is_enabled(), "Tried to execute a disabled actor");
-  xbt_assert(expected_executed_transition != nullptr,
-             "Expected a transition with %u times considered to be noted in actor %ld", times_considered, next);
-
+  auto& actor_state               = actors_to_run_.at(next);
+  const unsigned times_considered = actor_state.do_consider();
+  const Transition* expected_executed_transition = nullptr;
+  if (_sg_mc_debug) {
+    expected_executed_transition = actor_state.get_transition(times_considered).get();
+    xbt_assert(actor_state.is_enabled(), "Tried to execute a disabled actor");
+    xbt_assert(expected_executed_transition != nullptr,
+               "Expected a transition with %u times considered to be noted in actor %ld", times_considered, next);
+  }
   XBT_DEBUG("Let's run actor %ld (times_considered = %u)", next, times_considered);
 
   // 2. Execute the actor according to the preparation above
   Transition::executed_transitions_++;
   auto* just_executed = app.handle_simcall(next, times_considered, true);
-  xbt_assert(
-      just_executed->type_ == expected_executed_transition->type_,
-      "The transition that was just executed by actor %ld, viz:\n"
-      "%s\n"
-      "is not what was purportedly scheduled to execute, which was:\n"
-      "%s\n"
-      "If adding the --cfg=model-check/cached-states-interval:1 parameter solves this problem, then your application "
-      "is not purely data dependent (its outcome does not only depends on its input). McSimGrid may miss bugs in such "
-      "applications, as they cannot be exhaustively explored with Mc SimGrid.\n\n"
-      "If adding this parameter does not help, then it's probably a bug in Mc SimGrid itself. Please report it.\n",
-      next, just_executed->to_string().c_str(), expected_executed_transition->to_string().c_str());
+  if (_sg_mc_debug) {
+    xbt_assert(
+        just_executed->type_ == expected_executed_transition->type_,
+        "The transition that was just executed by actor %ld, viz:\n"
+        "%s\n"
+        "is not what was purportedly scheduled to execute, which was:\n"
+        "%s\n"
+        "If adding the --cfg=model-check/cached-states-interval:1 parameter solves this problem, then your application "
+        "is not purely data dependent (its outcome does not only depends on its input). McSimGrid may miss bugs in "
+        "such "
+        "applications, as they cannot be exhaustively explored with Mc SimGrid.\n\n"
+        "If adding this parameter does not help, then it's probably a bug in Mc SimGrid itself. Please report it.\n",
+        next, just_executed->to_string().c_str(), expected_executed_transition->to_string().c_str());
+  }
   // 3. Update the state with the newest information. This means recording
   // both
   //  1. what action was last taken from this state (viz. `executed_transition`)
@@ -119,7 +125,8 @@ std::shared_ptr<Transition> State::execute_next(aid_t next, RemoteApp& app)
   // about a transition AFTER it has executed.
   outgoing_transition_ = std::shared_ptr<Transition>(just_executed);
 
-  actor_state.set_transition(outgoing_transition_, times_considered);
+  if (Exploration::get_instance()->need_actor_status_transitions())
+    actor_state.set_transition(outgoing_transition_, times_considered);
   app.wait_for_requests();
 
   return outgoing_transition_;

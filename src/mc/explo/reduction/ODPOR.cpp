@@ -7,11 +7,13 @@
 #include "src/mc/api/states/WutState.hpp"
 #include "src/mc/explo/Exploration.hpp"
 #include "src/mc/explo/reduction/Reduction.hpp"
+#include "src/mc/transition/Transition.hpp"
 #include "xbt/asserts.h"
 #include "xbt/log.h"
 
 #include "src/mc/api/states/SleepSetState.hpp"
 #include "src/mc/api/states/State.hpp"
+#include <memory>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(mc_odpor, mc_reduction, "Logging specific to the odpor reduction");
 
@@ -85,7 +87,7 @@ aid_t ODPOR::next_to_explore(odpor::Execution& E, stack_t* S)
     XBT_DEBUG("ODPOR wants to execute a disabled transition %s.",
               s->get_actors_list().at(next).get_transition()->to_string(true).c_str());
     s->remove_subtree_at_aid(next);
-    s->add_sleep_set(s->get_actors_list().at(next).get_transition());
+    s->add_sleep_set(std::make_shared<Transition>(Transition::Type::UNKNOWN, next, 0));
     return next_to_explore(E, S);
   }
   return next;

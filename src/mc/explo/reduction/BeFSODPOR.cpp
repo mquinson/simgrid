@@ -110,7 +110,7 @@ aid_t BeFSODPOR::next_to_explore(odpor::Execution& E, stack_t* S)
     XBT_DEBUG("BeFS ODPOR wants to execute a disabled transition %s.",
               s->get_actors_list().at(next).get_transition()->to_string(true).c_str());
     s->remove_subtree_at_aid(next);
-    s->add_sleep_set(s->get_actors_list().at(next).get_transition());
+    s->add_sleep_set(std::make_shared<Transition>(Transition::Type::UNKNOWN, next, 0));
     return next_to_explore(E, S);
   }
 

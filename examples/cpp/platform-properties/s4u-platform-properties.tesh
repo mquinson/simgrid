@@ -49,6 +49,3 @@ $ ${bindir:=.}/s4u-platform-properties ${platfdir}/prop.xml "--log=root.fmt:[%10
 > [  2.000000] (4:david@host2) == Trying to modify a host property
 > [  2.000000] (4:david@host2)    Property: Hdd old value: 250
 > [  2.000000] (4:david@host2) == Print the properties of the zone 'acme' that contains 'node-0.simgrid.org'
-> [  2.000000] (4:david@host2)   Zone property: 'Hdd' -> '180'
-> [  2.000000] (4:david@host2)   Zone property: 'bla' -> 'acme cluster'
-> [  2.000000] (4:david@host2)   Zone property: 'mem' -> '42'

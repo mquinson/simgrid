@@ -10,8 +10,6 @@
 #include "src/mc/remote/Channel.hpp"
 #include "src/mc/transition/Transition.hpp"
 
-#include <event2/event.h>
-#include <functional>
 #include <memory>
 
 namespace simgrid::mc {
@@ -19,10 +17,6 @@ namespace simgrid::mc {
 /* CheckerSide: All what the checker needs to interact with a given application process */
 
 class CheckerSide {
-  event* socket_event_;
-  event* signal_event_ = nullptr;
-  std::unique_ptr<event_base, decltype(&event_base_free)> base_{nullptr, &event_base_free};
-
   Channel channel_;
   pid_t pid_;
   static unsigned count_;
@@ -30,7 +24,6 @@ class CheckerSide {
   // child_checker_ is a CheckerSide to our child that can waitpid our grandchild on our behalf
   CheckerSide* child_checker_ = nullptr;
 
-  void setup_events();                // Part of the initialization
   void handle_dead_child(int status); // Launched when the dying child is the PID we follow
   void handle_waitpid();              // Launched when receiving a sigchild
 
@@ -53,12 +46,18 @@ public:
   Channel const& get_channel() const { return channel_; }
   Channel& get_channel() { return channel_; }
 
-  bool handle_message(const char* buffer, ssize_t size);
-  void dispatch_events() const;
+  void sync_with_app();
   void wait_for_requests();
 
   /** Ask the application to run one step. A transition is built iff new_transition = true */
   Transition* handle_simcall(aid_t aid, int times_considered, bool new_transition);
+
+  /** Ask the application to run a full sequence of transition. The checker is not receiving any thing before the
+   *  end */
+  void handle_replay(std::deque<std::pair<aid_t, int>> to_replay);
+
+  /** Read the aid in the SIMCALL_EXECUTE message that is expected to be next on the wire */
+  aid_t get_aid_of_next_transition();
 
   /** Ask the application to run post-mortem analysis, and maybe to stop ASAP */
   void finalize(bool terminate_asap = false);

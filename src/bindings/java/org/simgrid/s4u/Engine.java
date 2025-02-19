@@ -77,9 +77,7 @@ public class Engine {
     return simgridJNI.Engine_flatify_platform(swigCPtr, this);
   }
 
-  public void load_deployment(String deploy) {
-    simgridJNI.Engine_load_deployment(swigCPtr, this, deploy);
-  }
+  public void load_deployment(String deploy) { simgridJNI.Engine_load_deployment(swigCPtr, deploy); }
 
   public long get_host_count() {
     return simgridJNI.Engine_get_host_count(swigCPtr, this);
